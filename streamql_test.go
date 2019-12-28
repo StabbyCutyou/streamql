@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"testing"
 )
 
@@ -78,14 +79,19 @@ func TestThing(t *testing.T) {
 		fmt.Println(err)
 		t.Fatal(err)
 	}
-	if b.String() == "" {
-		t.Fatal("nothing written")
+	d := json.NewDecoder(b)
+
+	for {
+		m := &model{}
+		if err := d.Decode(m); err == io.EOF {
+			break
+		} else if err != nil {
+			t.Fatal(err)
+		}
+		if m.A != "This is A" {
+			t.Fatal("fail")
+		}
 	}
-	if b.String() == "{}{}{}" {
-		t.Fatal("nothing hydrated, reflection broken")
-	}
-	// Uncomment this to see what the streaming data looks like
-	//t.Fatal(b.String())
 }
 
 func BenchmarkThing(b *testing.B) {
